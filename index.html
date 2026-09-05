@@ -506,7 +506,7 @@ function renderWeek(){
 
 /* ================= EVENTS ================= */
 document.addEventListener('click',e=>{
-  const el=e.target.closest('[data-session],[data-water],[data-meal],[data-cardio],[data-set],[data-train],[data-act],.tab');
+  const el=e.target.closest('[data-session],[data-water],[data-meal],[data-cardio],[data-set],[data-train],[data-act],[data-rest],[data-int],[data-t],[data-cfg],[data-set-opt],.tab');
   if(!el)return; const t=day();
   if(el.classList.contains('tab')){
     document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected',b===el));
