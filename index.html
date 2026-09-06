@@ -138,6 +138,8 @@
                  color:var(--signal);margin:0 0 8px}
   .menu-item{border-top:1px solid var(--line);padding:9px 0;font-size:13.5px}
   .menu-item b{display:block;font-size:11px;font-family:var(--mono);color:var(--mute);letter-spacing:.08em;margin-bottom:3px;text-transform:uppercase}
+  .tin{width:100%;background:var(--plate-2);border:1px solid var(--line);border-radius:8px;color:var(--ink);
+       padding:11px;font-family:var(--body);font-size:16px;resize:vertical}
   .hidden{display:none}
   .warn{background:#3A2A12;border:1px solid var(--amber);color:#FFD98A;font-size:12.5px;padding:10px 12px;
         border-radius:8px;margin-bottom:12px}
@@ -197,7 +199,10 @@ const MEALS={
  dinner:[
   {id:'dA',n:'Option A — Chicken, asparagus, rice',d:'6 oz chicken breast, 10 asparagus spears, 1/2 cup cooked brown rice.'},
   {id:'dB',n:'Option B — Beef & sweet potato',d:'4 oz lean ground beef with green and red peppers, 4 oz sweet potato (baked or air-fried).'},
-  {id:'dC',n:'Option C — Thighs or pork & broccoli',d:'5 oz chicken thighs or 5 oz lean pork, 1/2 cup white rice, 60 g broccoli.'}],
+  {id:'dC',n:'Option C — Thighs or pork & broccoli',d:'5 oz chicken thighs or 5 oz lean pork, 1/2 cup white rice, 60 g broccoli.'},
+  {id:'dD',n:'Thighs & green vegetables',d:'6 oz boneless skinless chicken thighs, roasted or air-fried. 1.5 cups green beans, broccoli or asparagus. No starch — the leanest of the three.'},
+  {id:'dE',n:'Thighs & rice',d:'6 oz boneless skinless chicken thighs, 2/3 cup cooked rice, peppers and onions sautéed alongside.'},
+  {id:'dF',n:'Thighs & potatoes',d:'6 oz boneless skinless chicken thighs, 5 oz roasted baby or sweet potatoes, 65 g green vegetable.'}],
  snack:[
   {id:'sA',n:'Shake + apple + PB cup',d:'Protein shake, one apple, natural Jif peanut butter cup.'},
   {id:'sB',n:'Shake + rice cake',d:'Protein shake, one rice cake, Jif peanut butter cup, 1–2 tsp honey.'},
@@ -266,9 +271,23 @@ const Store=(()=>{
   };
 })();
 
-let LOG={days:{},weights:{},settings:{}};
+let LOG={days:{},weights:{},settings:{},custom:[]};
+let addingMeal=false;
 const DEFAULTS={restLen:90,autoRest:true,work:30,rec:30,rounds:3,sound:true};
 function S(k){const v=LOG.settings[k];return v===undefined?DEFAULTS[k]:v}
+
+/* custom meals the user adds on the phone */
+function customFor(slot){return (LOG.custom||[]).filter(c=>c.slot===slot)}
+function optsFor(type){
+  if(type==='mid')return MEALS.lunch.concat(MEALS.dinner,customFor('lunch'),customFor('dinner'));
+  return MEALS[type].concat(customFor(type));
+}
+function findMeal(id){
+  if(!id)return null;
+  for(const k in MEALS){const m=MEALS[k].find(o=>o.id===id);if(m)return m}
+  return (LOG.custom||[]).find(c=>c.id===id)||null;
+}
+const SLOT_LABEL={breakfast:'Breakfast',lunch:'Lunch',dinner:'Dinner',snack:'Snack'};
 let today=iso(new Date()), trainPick=null;
 
 function iso(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
@@ -279,7 +298,7 @@ function save(){
   if(keys.length>180)keys.slice(0,keys.length-180).forEach(k=>delete LOG.days[k]);
   Store.write(LOG);
 }
-function load(){const p=Store.read();if(p){LOG.days=p.days||{};LOG.weights=p.weights||{};LOG.settings=p.settings||{}}}
+function load(){const p=Store.read();if(p){LOG.days=p.days||{};LOG.weights=p.weights||{};LOG.settings=p.settings||{};LOG.custom=p.custom||[]}}
 
 /* ================= TIMER ================= */
 const Timer=(()=>{
@@ -414,8 +433,7 @@ function renderToday(){
      (t.session==='rest'?'<div class="note">Rest day. No weights, no cardio. This one is part of the plan.</div>':''));
   const pct=Math.min(100,t.water/WATER_GOAL*100);
   const meals=SLOTS.map(s=>{
-    const opts=s.type==='mid'?MEALS.lunch.concat(MEALS.dinner):MEALS[s.type];
-    const cur=t.meals[s.k], sel=opts.find(o=>o.id===cur);
+    const opts=optsFor(s.type), sel=findMeal(t.meals[s.k]), cur=t.meals[s.k];
     return `<div class="slot ${t.done[s.k]?'done':''}">
       <div class="slot-head"><div class="box ${t.done[s.k]?'on':''}" data-meal="${s.k}">✓</div>
       <div class="slot-name">${s.name}</div><div class="slot-gap">${s.gap}</div></div>
@@ -438,13 +456,38 @@ function renderToday(){
 function renderFuel(){
   const g=(title,arr)=>`<div class="menu-group"><h3>${title}</h3>
     ${arr.map(o=>`<div class="menu-item"><b>${esc(o.n)}</b>${esc(o.d)}</div>`).join('')}</div>`;
+  const mine=LOG.custom||[];
+  const form=addingMeal?`
+    <div style="border-top:1px solid var(--line);padding-top:12px;margin-top:10px">
+      <div class="lbl" style="margin-bottom:6px">Which slot</div>
+      <select id="f-slot">
+        ${['breakfast','lunch','dinner','snack'].map(k=>`<option value="${k}">${SLOT_LABEL[k]}</option>`).join('')}
+      </select>
+      <div class="lbl" style="margin:12px 0 6px">Name</div>
+      <input id="f-name" class="tin" placeholder="e.g. Ideal Nutrition — chicken & rice">
+      <div class="lbl" style="margin:12px 0 6px">What's in it</div>
+      <textarea id="f-det" class="tin" rows="3" placeholder="Portions, sides, anything you want to remember"></textarea>
+      <div class="row">
+        <button class="btn" data-act="savemeal" style="flex:1;padding:12px">Save meal</button>
+        <button class="btn" data-act="cancelmeal">Cancel</button>
+      </div>
+    </div>`:
+    `<button class="btn" data-act="addmeal" style="width:100%;padding:12px;margin-top:4px">+ Add your own meal</button>`;
+
   $('view-fuel').innerHTML=`
+    <div class="card"><div class="eyebrow"><span>Your meals</span><span>${mine.length} added</span></div>
+      ${mine.length?mine.map(c=>`<div class="menu-item" style="display:flex;gap:10px;align-items:flex-start">
+          <div style="flex:1"><b>${esc(SLOT_LABEL[c.slot])} · ${esc(c.n)}</b>${esc(c.d||'')}</div>
+          <button class="tbtn" data-del-meal="${esc(c.id)}" style="padding:6px 10px">✕</button></div>`).join('')
+        :'<div class="menu-item" style="border:0;padding-top:0;color:var(--mute)">Nothing yet. Anything you add here shows up in the dropdowns on the Today tab.</div>'}
+      ${form}
+    </div>
     <div class="card"><div class="eyebrow">Daily rules</div>
       <div class="menu-item" style="border:0;padding-top:0">100–128 oz water a day. One sugar-free energy drink max.</div>
       <div class="menu-item">Condiments: hot sauce and mustard. Choose low-calorie where possible and check serving sizes on the regular versions.</div>
       <div class="menu-item">Ask for extra protein when ordering out.</div>
       <div class="menu-item">Spacing: 2–3 hours between meals, 1.5–2 hours after a snack.</div></div>
-    <div class="card"><div class="eyebrow">All options</div>
+    <div class="card"><div class="eyebrow">Original plan</div>
       ${g('Breakfast',MEALS.breakfast)}${g('Lunch',MEALS.lunch)}${g('Dinner',MEALS.dinner)}${g('Snacks',MEALS.snack)}</div>`;
 }
 function renderTrain(){
@@ -513,7 +556,7 @@ function renderWeek(){
 
 /* ================= EVENTS ================= */
 document.addEventListener('click',e=>{
-  const el=e.target.closest('[data-session],[data-water],[data-meal],[data-cardio],[data-set],[data-train],[data-act],[data-rest],[data-int],[data-t],[data-cfg],[data-set-opt],.tab');
+  const el=e.target.closest('[data-session],[data-water],[data-meal],[data-cardio],[data-set],[data-train],[data-act],[data-rest],[data-int],[data-t],[data-cfg],[data-set-opt],[data-del-meal],.tab');
   if(!el)return; const t=day();
   if(el.classList.contains('tab')){
     document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected',b===el));
@@ -521,6 +564,21 @@ document.addEventListener('click',e=>{
     if(el.dataset.v==='train')renderTrain();
     window.scrollTo({top:0});return;
   }
+  if(el.dataset.act==='addmeal'){addingMeal=true;renderFuel();return}
+  if(el.dataset.act==='cancelmeal'){addingMeal=false;renderFuel();return}
+  if(el.dataset.act==='savemeal'){
+    const name=($('f-name').value||'').trim();
+    if(!name){$('f-name').focus();return}
+    if(!LOG.custom)LOG.custom=[];
+    LOG.custom.push({id:'c'+Date.now().toString(36),slot:$('f-slot').value,
+                     n:name,d:($('f-det').value||'').trim()});
+    addingMeal=false;save();renderFuel();renderToday();return}
+  if(el.dataset.delMeal){
+    const id=el.dataset.delMeal;
+    LOG.custom=(LOG.custom||[]).filter(c=>c.id!==id);
+    Object.values(LOG.days).forEach(d=>{
+      Object.keys(d.meals||{}).forEach(k=>{if(d.meals[k]===id)d.meals[k]=''})});
+    save();renderFuel();renderToday();return}
   if(el.dataset.act==='backup'){backup();return}
   if(el.dataset.act==='restore'){$('restoreFile').click();return}
   if(el.dataset.act==='clear'){LOG.days[today]=blank();save();render();return}
@@ -574,6 +632,7 @@ document.addEventListener('change',e=>{
       LOG.days=Object.assign(LOG.days,p.days);
       LOG.weights=Object.assign(LOG.weights,p.weights||{});
       LOG.settings=Object.assign(LOG.settings,p.settings||{});
+      if(p.custom&&p.custom.length)LOG.custom=p.custom;
       save();render();alert('Backup restored.')}
       catch(err){alert("That file isn't a training backup. Pick the .json file you saved from this app.")}};
     r.readAsText(e.target.files[0]); e.target.value='';
