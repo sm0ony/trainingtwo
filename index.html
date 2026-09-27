@@ -87,6 +87,32 @@
 
   .wbar{height:12px;background:var(--plate-2);border:1px solid var(--line);border-radius:99px;overflow:hidden;margin:4px 0 10px}
   .wfill{height:100%;background:linear-gradient(90deg,var(--signal),#66A6FF);width:0;transition:width .3s}
+  .wfill.hit{background:linear-gradient(90deg,var(--done),#8FF0BC)}
+  .wfill.pop{animation:surge 1.1s cubic-bezier(.2,.8,.3,1)}
+  @keyframes surge{
+    0%{filter:brightness(1)}
+    18%{filter:brightness(2.1) saturate(1.4)}
+    45%{filter:brightness(1.25)}
+    70%{filter:brightness(1.7)}
+    100%{filter:brightness(1)}
+  }
+  .wbar.pop{animation:swell .9s ease-out}
+  @keyframes swell{
+    0%{transform:scaleY(1)}
+    25%{transform:scaleY(2.1)}
+    60%{transform:scaleY(1.15)}
+    100%{transform:scaleY(1)}
+  }
+  .supp{display:flex;align-items:center;gap:7px;flex:none}
+  .supp .lbl{letter-spacing:.1em}
+  .hitbadge{font-family:var(--display);font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+            color:var(--done);margin-left:8px;white-space:nowrap}
+  .hitbadge.pop{animation:badgein .7s ease-out}
+  @keyframes badgein{
+    0%{opacity:0;transform:translateY(6px) scale(.85)}
+    55%{opacity:1;transform:translateY(0) scale(1.12)}
+    100%{opacity:1;transform:translateY(0) scale(1)}
+  }
   .wrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   .wbtns{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
   .wbtns .btn{padding:9px 11px;min-width:44px;text-align:center}
@@ -187,28 +213,29 @@
 /* ================= PLAN DATA ================= */
 const MEALS={
  breakfast:[
-  {id:'bA',n:'Option A — Eggs & spinach',d:'2 egg whites + 1 whole egg scrambled with 2 cups raw spinach and 1 serving shredded cheese. 2 slices whole-grain toast with low-fat butter spread.'},
-  {id:'bB',n:'Option B — Protein oats (travel)',d:'2/3 cup high-protein oats mixed with 1 scoop low-carb whey, topped with 1/2 cup blueberries.'},
-  {id:'bC',n:'Option C — Greek yogurt bowl (travel)',d:'1 cup low-fat Greek yogurt, cinnamon, 1–2 tsp honey, 1 oz crushed walnuts or almonds, 1/2 sliced banana.'},
-  {id:'bD',n:'Option D — Egg bites & oats',d:'2 orders (4) roasted red pepper egg bites + 1 cup oats with agave and sliced almonds.'}],
+  {id:'bA',n:'Option A — 4 egg whites, cheese, yogurt, ½ apple',d:'4 egg whites, 1 serving cheese, Greek vanilla yogurt with 1/2 apple.'},
+  {id:'bB',n:'Option B — ½ cup oats, 1 scoop protein, blueberries',d:'1/2 cup oats, 1 scoop low-fat/low-carb high-protein powder, 1 serving blueberries.'},
+  {id:'bC',n:'Option C — Shake + strawberries',d:'Protein shake with a serving of strawberries.'}],
  lunch:[
-  {id:'lA',n:'Option A — Chicken & big salad',d:'6–8 oz grilled chicken breast, large mixed green salad, light balsamic vinaigrette. Side: 1 serving salted almonds, cashews or pistachios.'},
-  {id:'lB',n:'Option B — Protein, rice & peppers',d:'4–5 oz chicken or steak, 1/3 cup rice, any mix of peppers and onions.'},
-  {id:'lC',n:'Option C — Deli sandwich',d:"2 slices Dave's Killer 21 Whole Grain, 1 oz turkey + 1 oz ham, light reduced-fat mayo, tomato, lettuce, mustard. Side: 1 serving pork rinds."},
-  {id:'lD',n:'Option D — Steak, chicken & potato',d:'3 oz steak, 2 oz chicken, 4 oz baked or roasted potato, 65 g green vegetables.'}],
+  {id:'lA',n:'Lunch A — 7 oz ground turkey, 5 oz sweet potato',d:'7 oz ground turkey, 5 oz sweet potato.'},
+  {id:'lB',n:'Lunch B — ½ sandwich, shake, 1 serving nuts',d:"Protein shake plus a half sandwich: 2 slices Dave's Killer 21 Whole Grain cut in half, 2 oz deli turkey and 2 oz ham, light reduced-fat mayo, sliced tomato, lettuce, mustard. Side: 1 serving lightly salted almonds, cashews or walnuts, your choice."},
+  {id:'lC',n:'Lunch C — 4 oz chicken, 4 oz steak, ¾ cup rice',d:'4 oz chicken and 4 oz steak, 3/4 cup rice, any mix of peppers and onions.'}],
  dinner:[
-  {id:'dA',n:'Option A — Chicken, asparagus, rice',d:'6 oz chicken breast, 10 asparagus spears, 1/2 cup cooked brown rice.'},
-  {id:'dB',n:'Option B — Beef & sweet potato',d:'4 oz lean ground beef with green and red peppers, 4 oz sweet potato (baked or air-fried).'},
-  {id:'dC',n:'Option C — Thighs or pork & broccoli',d:'5 oz chicken thighs or 5 oz lean pork, 1/2 cup white rice, 60 g broccoli.'},
-  {id:'dD',n:'Thighs & green vegetables',d:'6 oz boneless skinless chicken thighs, roasted or air-fried. 1.5 cups green beans, broccoli or asparagus. No starch — the leanest of the three.'},
-  {id:'dE',n:'Thighs & rice',d:'6 oz boneless skinless chicken thighs, 2/3 cup cooked rice, peppers and onions sautéed alongside.'},
-  {id:'dF',n:'Thighs & potatoes',d:'6 oz boneless skinless chicken thighs, 5 oz roasted baby or sweet potatoes, 65 g green vegetable.'}],
+  {id:'dA',n:'Dinner A — 8 oz chicken, 10 asparagus, ½ cup rice',d:'8 oz chicken breast, 10 asparagus spears, 1/2 cup cooked brown rice.'},
+  {id:'dB',n:'Dinner B — 6 oz salmon, 1 cup broccoli, pineapple',d:'6 oz salmon, 1 cup broccoli, 1 serving pineapple.'},
+  {id:'dC',n:'Dinner C — 6 oz turkey, peppers, ⅓ cup rice',d:'6 oz lean ground turkey with red and green peppers and onions, 1/3 cup rice.'}],
  snack:[
-  {id:'sA',n:'Shake + apple + PB cup',d:'Protein shake, one apple, natural Jif peanut butter cup.'},
-  {id:'sB',n:'Shake + rice cake',d:'Protein shake, one rice cake, Jif peanut butter cup, 1–2 tsp honey.'},
-  {id:'sC',n:'Shake + chips or rinds',d:'Protein shake with one bag of Quest protein chips or pork rinds.'},
-  {id:'sD',n:'Shake + yogurt & fruit',d:'Protein shake, Greek yogurt, a few pieces of any fruit.'}]
+  {id:'sP',n:'Pre-workout — yogurt, almond butter, ½ apple',d:'Vanilla Greek yogurt with 1/2 tablespoon almond butter mixed in, plus 1/2 apple.'},
+  {id:'sA',n:'½ apple + almond butter cup',d:'1/2 apple with a serving of almond butter cup.'},
+  {id:'sB',n:'1 rice cake + almond butter',d:'One rice cake with a serving of almond butter.'},
+  {id:'sC',n:'1 bag Quest chips or pork rinds',d:'One bag of Quest protein chips or pork rinds.'},
+  {id:'sD',n:'Greek yogurt + fruit',d:'Greek yogurt with a few pieces of any fruit you like.'}]
 };
+const SUPPS=[
+ {k:'mt',n:'Milk Thistle'},
+ {k:'dr',n:'Dandelion Root'},
+ {k:'pe',n:'Papaya Enzymes'}];
+
 const SLOTS=[
  {k:'m1',name:'Breakfast',type:'breakfast',gap:'then 2–3 hrs'},
  {k:'m2',name:'Snack',type:'snack',gap:'then 1.5–2 hrs'},
@@ -220,8 +247,9 @@ const W={
  chest:{name:'Chest',short:'CHEST',lift:true,ex:[
   {n:'Push-ups with alternating arm raise',s:'4 × 12–15',sets:4,v:'https://m.youtube.com/shorts/NON4MT4Y-As'},
   {n:'Decline dumbbell chest press',s:'4 × 10',sets:4},
-  {n:'Decline wide-arm push-ups',s:'sets/reps not set',sets:4,note:'Thumbs just outside shoulders. Your workbook left this blank — 3–4 × 10–12 matches the rest of the circuit.'},
-  {n:'Seated dumbbell underhand chest fly',s:'4 × 15',sets:4,v:'https://m.youtube.com/shorts/EdauMnxtqnU'}]},
+  {n:'Decline wide-arm push-ups',s:'4 × 12',sets:4,v:'https://m.youtube.com/watch?v=X-HbQoQ_VAg',note:'Thumbs just outside shoulders.'},
+  {n:'Seated dumbbell underhand chest fly',s:'4 × 15',sets:4,v:'https://m.youtube.com/shorts/EdauMnxtqnU'},
+  {n:'Bench press',s:'2 × 10, then drop set',sets:3,v:'https://m.youtube.com/watch?v=OnfqK7cGhC8',note:'Third set is the drop set — strip weight and keep going to failure.'}]},
  arms:{name:'Arms & shoulders',short:'ARMS',lift:true,ex:[
   {n:'Incline dumbbell curls',s:'4 × 10',sets:4},
   {n:'Incline diamond push-ups',s:'4 × 12',sets:4},
@@ -229,8 +257,8 @@ const W={
   {n:'Dumbbell / barbell 21s',s:'3 sets',sets:3,v:'https://m.youtube.com/shorts/gKOo4HyCM_M'},
   {n:'Dumbbell neutral close-grip press',s:'4 × 12',sets:4,v:'https://m.youtube.com/shorts/EvjftwN-nSY'}]},
  legs:{name:'Legs & back',short:'LEGS',lift:true,ex:[
-  {n:'Trap bar deadlifts',s:'4 × 12',sets:4},
-  {n:'Dumbbell single-arm rows',s:'4 × 12',sets:4},
+  {n:'Trap bar deadlift + squat jumps',s:'4 × 8 / 4 × 10',sets:4,note:'Superset — deadlifts straight into squat jumps, then rest.'},
+  {n:'DB single-arm row + weighted jumping jacks',s:'4 × 10 / 4 × 15',sets:4,note:'Superset — rows straight into jumping jacks, then rest.'},
   {n:'Dumbbell alternating lunges',s:'4 × 8 each leg',sets:4},
   {n:'Plate-loaded hyperextensions',s:'4 × 12',sets:4,v:'https://m.youtube.com/shorts/zR1kGOiyX70'},
   {n:'Dumbbell stiff-legged deadlift',s:'4 × 10',sets:4},
@@ -238,15 +266,15 @@ const W={
  hiitA:{name:'HIIT A — total body',short:'HIIT A',hiit:true,ex:[
   {n:'Dumbbell squat to shoulder press',s:'10–20 lb · 3 rounds',sets:3},
   {n:'Lying scissor kicks',s:'3 rounds',sets:3,v:'https://m.youtube.com/shorts/2DL3HVW93_0'},
-  {n:'Modified burpees',s:'3 rounds',sets:3},
-  {n:'Bench-assisted mountain climbers',s:'3 rounds',sets:3},
+  {n:'Weighted jumping jacks',s:'3 rounds',sets:3},
+  {n:'Mountain climbers',s:'3 rounds',sets:3},
   {n:'Jump rope',s:'3 rounds',sets:3},
   {n:'Alternating forward lunges',s:'3 rounds',sets:3}]},
  hiitB:{name:'HIIT B',short:'HIIT B',hiit:true,ex:[
-  {n:'Jump rope',s:'3 rounds',sets:3},
-  {n:'Treadmill jog',s:'0.25 mile',sets:1},
+  {n:'Power shuffles',s:'3 rounds',sets:3,v:'https://m.youtube.com/shorts/-8VvfhUQsrA'},
+  {n:'Treadmill jog',s:'0.5 mile',sets:1},
   {n:'Lying leg lifts',s:'3 rounds',sets:3},
-  {n:'Dumbbell jumping jacks',s:'3 rounds',sets:3},
+  {n:'High knees',s:'3 rounds',sets:3},
   {n:'Plank up/downs',s:'3 rounds',sets:3,v:'https://m.youtube.com/watch?v=jF3wvzUUw7s'}]},
  rest:{name:'Full rest',short:'REST',rest:true,ex:[]}
 };
@@ -291,7 +319,7 @@ const SLOT_LABEL={breakfast:'Breakfast',lunch:'Lunch',dinner:'Dinner',snack:'Sna
 let today=iso(new Date()), trainPick=null;
 
 function iso(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
-function blank(){return{session:null,cardio:false,water:0,meals:{},done:{},sets:{}}}
+function blank(){return{session:null,cardio:false,water:0,meals:{},done:{},sets:{},supps:{}}}
 function day(k){k=k||today;if(!LOG.days[k])LOG.days[k]=blank();return LOG.days[k]}
 function save(){
   const keys=Object.keys(LOG.days).sort();
@@ -388,6 +416,7 @@ const Timer=(()=>{
     },
     add(){if(!mode)return;if(paused)left+=15;else endAt+=15000;paint()},
     stop(){mode=null;phase=null;clearInterval(tick);tick=null;wake(false);paint()},
+    chime(){beep(880,0.12,0.28);setTimeout(()=>beep(1320,0.3,0.3),140)},
     running(){return !!mode}
   };
   function stop(){mode=null;phase=null;clearInterval(tick);tick=null;wake(false);paint()}
@@ -396,12 +425,28 @@ const Timer=(()=>{
 function weekDates(){const d=new Date(),off=d.getDay();d.setDate(d.getDate()-off);
   return Array.from({length:7},(_,i)=>{const x=new Date(d);x.setDate(d.getDate()+i);return iso(x)})}
 function counts(){const c={arms:0,chest:0,legs:0,hiit:0,rest:0};
-  weekDates().forEach(k=>{const s=LOG.days[k]&&LOG.days[k].session;if(!s)return;
+  weekDates().forEach(k=>{const s=LOG.days[k]&&LOG.days[k].session;if(!s||!W[s])return;
     if(s==='hiitA'||s==='hiitB')c.hiit++;else if(c[s]!==undefined)c[s]++});return c}
-function streak(){let n=0,d=new Date();
-  for(let i=0;i<400;i++){const e=LOG.days[iso(d)];
-    if(e&&(e.session||e.water>0||Object.keys(e.done).length))n++;else if(i>0)break;
-    d.setDate(d.getDate()-1)}return n}
+/* True streak: counts back from today and stops at the first day with nothing logged.
+   Day 1 was Sept 14. Everything up to and including Sept 27 is credited as completed,
+   since those days happened before the app existed. From Sept 28 on, a day only counts
+   if something is logged — session, water, a meal or a supplement. */
+const STREAK_START='2026-09-14';
+const STREAK_CREDITED_THROUGH='2026-09-27';
+function streak(){
+  const start=new Date(STREAK_START+'T12:00'), thru=new Date(STREAK_CREDITED_THROUGH+'T12:00');
+  let n=0, d=new Date(); d.setHours(12,0,0,0);
+  for(let i=0;i<800;i++){
+    const e=LOG.days[iso(d)];
+    const logged=!!(e&&(e.session||e.water>0||
+      Object.keys(e.done||{}).length||Object.keys(e.supps||{}).length));
+    const credited=(d>=start&&d<=thru);
+    if(logged||credited)n++;
+    else if(i>0)break;          /* today being blank doesn't break the run yet */
+    d.setDate(d.getDate()-1);
+  }
+  return n;
+}
 
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -418,7 +463,7 @@ function render(){
 }
 function renderStrip(){
   const L=['Su','M','Tu','W','Th','F','Sa'];
-  $('strip').innerHTML=weekDates().map((k,i)=>{const s=LOG.days[k]&&LOG.days[k].session;
+  $('strip').innerHTML=weekDates().map((k,i)=>{let s=LOG.days[k]&&LOG.days[k].session; if(s&&!W[s])s=null;
     return `<div class="cell ${s?'filled':''} ${s==='rest'?'rest':''} ${k===today?'today':''}">
       <div class="d">${L[i]}</div><div class="m">${s?W[s].short:'—'}</div></div>`}).join('');
 }
@@ -428,10 +473,11 @@ function renderToday(){
   const extra=W[t.session]&&W[t.session].lift?
     `<div class="slot ${t.cardio?'done':''}" style="border-top:1px solid var(--line);margin-top:12px">
       <div class="slot-head"><div class="box ${t.cardio?'on':''}" data-cardio="1">✓</div>
-      <div class="slot-name">Cardio — 20 min walk</div><div class="slot-gap">3.0–3.5 · 6% incline</div></div></div>`:
+      <div class="slot-name">Cardio — 25 min walk</div><div class="slot-gap">3.0–3.5 · 6% incline</div></div></div>`:
     (W[t.session]&&W[t.session].hiit?'<div class="note">HIIT day — no lifting, no cardio walk.</div>':
      (t.session==='rest'?'<div class="note">Rest day. No weights, no cardio. This one is part of the plan.</div>':''));
   const pct=Math.min(100,t.water/WATER_GOAL*100);
+  const sTaken=SUPPS.reduce((a,sp)=>a+(t.supps&&t.supps[sp.k+'-am']?1:0)+(t.supps&&t.supps[sp.k+'-pm']?1:0),0);
   const meals=SLOTS.map(s=>{
     const opts=optsFor(s.type), sel=findMeal(t.meals[s.k]), cur=t.meals[s.k];
     return `<div class="slot ${t.done[s.k]?'done':''}">
@@ -443,14 +489,27 @@ function renderToday(){
   $('view-today').innerHTML=`
     <div class="card"><div class="eyebrow">Today's session</div><div class="chips">${chips}</div>${extra}</div>
     <div class="card"><div class="eyebrow"><span>Water</span><span>goal 100–128 oz</span></div>
-      <div class="wbar"><div class="wfill" style="width:${pct}%"></div></div>
-      <div class="wrow"><div class="num">${t.water}<s> / ${WATER_GOAL} oz</s></div>
+      <div class="wbar" id="wbar"><div class="wfill${t.water>=100?' hit':''}" id="wfill" style="width:${pct}%"></div></div>
+      <div class="wrow"><div class="num">${t.water}<s> / ${WATER_GOAL} oz</s>${t.water>=100?'<span class="hitbadge" id="wbadge">Goal hit</span>':''}</div>
       <div class="wbtns">
         <button class="btn" data-water="-5">−5</button>
         <button class="btn" data-water="5">+5</button>
         <button class="btn" data-water="10">+10</button>
         <button class="btn" data-water="30">+30</button></div></div>
       <div class="note">Limit to one sugar-free / zero energy drink per day.</div></div>
+    <div class="card">
+      <div class="eyebrow"><span>Supplements</span><span>${sTaken} / 6 taken</span></div>
+      ${SUPPS.map(sp=>{
+        const am=!!(t.supps&&t.supps[sp.k+'-am']), pm=!!(t.supps&&t.supps[sp.k+'-pm']);
+        return `<div class="slot ${am&&pm?'done':''}">
+          <div class="slot-head">
+            <div class="slot-name">${sp.n}</div>
+            <div class="supp">
+              <span class="lbl">AM</span><div class="box ${am?'on':''}" data-supp="${sp.k}-am">\u2713</div>
+              <span class="lbl">PM</span><div class="box ${pm?'on':''}" data-supp="${sp.k}-pm">\u2713</div>
+            </div>
+          </div></div>`}).join('')}
+    </div>
     <div class="card"><div class="eyebrow"><span>Meals</span><span>${Object.values(t.done).filter(Boolean).length} / 5 logged</span></div>${meals}</div>`;
 }
 function renderFuel(){
@@ -544,7 +603,7 @@ function renderWeek(){
     ${weekDates().map(k=>{const e=LOG.days[k], d=new Date(k+'T12:00');
       return `<div class="target">
         <div class="t-name" style="font-family:var(--mono);font-size:12px;color:var(--mute);flex:0 0 76px">${d.toLocaleDateString(undefined,{weekday:'short',day:'numeric'})}</div>
-        <div class="t-name">${e&&e.session?esc(W[e.session].name):'<span style="color:var(--line)">not logged</span>'}</div>
+        <div class="t-name">${e&&e.session&&W[e.session]?esc(W[e.session].name):'<span style="color:var(--line)">not logged</span>'}</div>
         <div class="t-count">${e&&e.water?e.water+' oz':''}</div></div>`}).join('')}</div>
     <div class="card"><div class="eyebrow">Your data</div>
       <div class="menu-item" style="border:0;padding-top:0">Everything is stored on this device only. Back it up before clearing Safari data or switching phones.</div>
@@ -556,7 +615,7 @@ function renderWeek(){
 
 /* ================= EVENTS ================= */
 document.addEventListener('click',e=>{
-  const el=e.target.closest('[data-session],[data-water],[data-meal],[data-cardio],[data-set],[data-train],[data-act],[data-rest],[data-int],[data-t],[data-cfg],[data-set-opt],[data-del-meal],.tab');
+  const el=e.target.closest('[data-session],[data-water],[data-meal],[data-cardio],[data-set],[data-train],[data-act],[data-rest],[data-int],[data-t],[data-cfg],[data-set-opt],[data-del-meal],[data-supp],.tab');
   if(!el)return; const t=day();
   if(el.classList.contains('tab')){
     document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected',b===el));
@@ -586,9 +645,22 @@ document.addEventListener('click',e=>{
     t.session=t.session===el.dataset.session?null:el.dataset.session;
     if(t.session==='rest')t.cardio=false;
     trainPick=t.session;save();render();return}
-  if(el.dataset.water!==undefined){t.water=Math.max(0,t.water+ +el.dataset.water);save();renderToday();renderWeek();return}
+  if(el.dataset.water!==undefined){
+    const before=t.water;
+    t.water=Math.max(0,t.water+ +el.dataset.water);
+    const crossed=before<100&&t.water>=100;
+    save();renderToday();renderWeek();
+    if(crossed){
+      const f=$('wfill'),b=$('wbar'),g=$('wbadge');
+      if(f)f.classList.add('pop'); if(b)b.classList.add('pop'); if(g)g.classList.add('pop');
+      try{Timer.chime()}catch(e){}
+      setTimeout(()=>{if(f)f.classList.remove('pop');if(b)b.classList.remove('pop');if(g)g.classList.remove('pop')},1300);
+    }
+    return}
   if(el.dataset.meal){t.done[el.dataset.meal]=!t.done[el.dataset.meal];save();renderToday();return}
   if(el.dataset.cardio){t.cardio=!t.cardio;save();renderToday();return}
+  if(el.dataset.supp){if(!t.supps)t.supps={};
+    t.supps[el.dataset.supp]=!t.supps[el.dataset.supp];save();renderToday();return}
   if(el.dataset.set){const id=el.dataset.set,i=+el.dataset.i;
     if(!t.sets[id])t.sets[id]=[];
     const nowOn=!t.sets[id][i]; t.sets[id][i]=nowOn; save(); renderTrain();
