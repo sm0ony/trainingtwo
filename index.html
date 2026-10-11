@@ -34,6 +34,9 @@
   .date{font-family:var(--mono);font-size:11px;color:var(--mute);letter-spacing:.12em;text-transform:uppercase;margin-top:5px}
   .streak{font-family:var(--mono);font-size:10px;color:var(--mute);text-align:right;letter-spacing:.08em;text-transform:uppercase}
   .streak b{display:block;font-family:var(--display);font-size:30px;color:var(--amber);letter-spacing:.03em}
+  .phase{display:inline-block;margin-top:6px;padding:3px 8px;border:1px solid var(--signal);
+         border-radius:99px;color:var(--signal);font-family:var(--display);font-size:10px;
+         letter-spacing:.16em;line-height:1}
 
   .strip{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:18px}
   .cell{background:var(--plate);border:1px solid var(--line);border-radius:5px;padding:7px 2px 6px;text-align:center}
@@ -178,7 +181,7 @@
   <div id="banner"></div>
   <div class="head">
     <div><div class="mark">Iron <em>&amp;</em> Oats</div><div class="dow" id="dow">—</div><div class="date" id="date"></div></div>
-    <div class="streak">on plan<b id="streak">0</b>days</div>
+    <div class="streak">on plan days<b id="streak">0</b><span class="phase" id="phase"></span></div>
   </div>
   <div class="strip" id="strip"></div>
   <div id="view-today"></div>
@@ -213,78 +216,99 @@
 /* ================= PLAN DATA ================= */
 const MEALS={
  breakfast:[
-  {id:'bA',n:'Option A — 4 egg whites, cheese, yogurt, ½ apple',d:'4 egg whites, 1 serving cheese, Greek vanilla yogurt with 1/2 apple.'},
-  {id:'bB',n:'Option B — ½ cup oats, 1 scoop protein, blueberries',d:'1/2 cup oats, 1 scoop low-fat/low-carb high-protein powder, 1 serving blueberries.'},
-  {id:'bC',n:'Option C — Shake + strawberries',d:'Protein shake with a serving of strawberries.'}],
+  {id:'bA',n:'Option A — Breakfast burrito, 5 egg whites',d:'5 egg whites, 1 serving cheese, 1 cup spinach, 1/3 cup peppers and onions, in 1 carb balance wrap. 4 oz pineapple on the side.'},
+  {id:'bB',n:'Option B — 4 oz steak, 3 egg whites, ⅓ cup oats',d:'4 oz steak, 3 egg whites, 1/3 cup oats with 1/4 cup blueberries.'},
+  {id:'bC',n:'Option C — Shake + ½ grapefruit',d:'Protein shake with half a grapefruit.'}],
  lunch:[
-  {id:'lA',n:'Lunch A — 7 oz ground turkey, 5 oz sweet potato',d:'7 oz ground turkey, 5 oz sweet potato.'},
-  {id:'lB',n:'Lunch B — ½ sandwich, shake, 1 serving nuts',d:"Protein shake plus a half sandwich: 2 slices Dave's Killer 21 Whole Grain cut in half, 2 oz deli turkey and 2 oz ham, light reduced-fat mayo, sliced tomato, lettuce, mustard. Side: 1 serving lightly salted almonds, cashews or walnuts, your choice."},
-  {id:'lC',n:'Lunch C — 4 oz chicken, 4 oz steak, ¾ cup rice',d:'4 oz chicken and 4 oz steak, 3/4 cup rice, any mix of peppers and onions.'}],
+  {id:'lA',n:'Lunch A — 6 oz chicken, 4 oz sweet potato mash',d:'6 oz grilled chicken, 4 oz sweet potato mash.'},
+  {id:'lB',n:'Lunch B — 5 oz chicken over a big salad',d:'5 oz sliced chicken breast over romaine and baby spinach, roughly 1/3 cup cucumber, 1/3 cup carrot slices, 1/2 cup grape tomatoes.'},
+  {id:'lC',n:'Lunch C — 4 oz steak, 2 oz chicken, ½ cup rice',d:'4 oz steak and 2 oz chicken, 1/2 cup rice, any mix of peppers and onions. 4 oz mango.'}],
+ pre:[
+  {id:'pA',n:'4 oz chicken + ½ cup fresh salsa',d:'4 oz chicken with 1/2 cup fresh salsa.'},
+  {id:'pB',n:'Shake + 2 mandarin oranges',d:'Protein shake with two mandarin oranges.'}],
+ post:[
+  {id:'qA',n:'2 rice cakes + almond butter',d:'Two rice cakes with 1 serving of almond butter, straight after training.'}],
  dinner:[
-  {id:'dA',n:'Dinner A — 8 oz chicken, 10 asparagus, ½ cup rice',d:'8 oz chicken breast, 10 asparagus spears, 1/2 cup cooked brown rice.'},
-  {id:'dB',n:'Dinner B — 6 oz salmon, 1 cup broccoli, pineapple',d:'6 oz salmon, 1 cup broccoli, 1 serving pineapple.'},
-  {id:'dC',n:'Dinner C — 6 oz turkey, peppers, ⅓ cup rice',d:'6 oz lean ground turkey with red and green peppers and onions, 1/3 cup rice.'}],
+  {id:'dA',n:'Dinner A — 6 oz chicken, 10 asparagus, ¾ cup rice',d:'6 oz chicken breast, 10 asparagus spears, 3/4 cup cooked brown rice.'},
+  {id:'dB',n:'Dinner B — 6 oz shrimp, broccoli & carrots',d:'6 oz shrimp, 1/2 cup broccoli with 1/2 cup carrots.'},
+  {id:'dC',n:'Dinner C — 8 oz turkey, peppers, 2–3 mini wraps',d:'8 oz lean ground turkey with red and green peppers, onions and taco seasoning, in 2–3 mini soft wraps.'}],
  snack:[
-  {id:'sP',n:'Pre-workout — yogurt, almond butter, ½ apple',d:'Vanilla Greek yogurt with 1/2 tablespoon almond butter mixed in, plus 1/2 apple.'},
-  {id:'sA',n:'½ apple + almond butter cup',d:'1/2 apple with a serving of almond butter cup.'},
-  {id:'sB',n:'1 rice cake + almond butter',d:'One rice cake with a serving of almond butter.'},
+  {id:'sA',n:'1 apple + almond butter',d:'One apple with a serving of almond butter.'},
+  {id:'sB',n:'Vanilla Greek yogurt + almond butter',d:'1 vanilla Greek yogurt with 1 tablespoon almond butter mixed in.'},
   {id:'sC',n:'1 bag Quest chips or pork rinds',d:'One bag of Quest protein chips or pork rinds.'},
-  {id:'sD',n:'Greek yogurt + fruit',d:'Greek yogurt with a few pieces of any fruit you like.'}]
+  {id:'sD',n:'Greek yogurt + fruit',d:'Greek yogurt with a few pieces of any fruit you like.'}],
+ refeed:[
+  {id:'rA',n:'Refeed — Chipotle-style bowl',d:'Chipotle style bowl with your choice of toppings. Go light on the cheese and sour cream.'},
+  {id:'rB',n:'Refeed — 8 oz steak or chicken + rice or potato',d:'8 oz steak or chicken breast, 1 cup rice or 6 oz potato, 1.5 cups of any vegetable.'},
+  {id:'rC',n:'Refeed — 7 oz salmon or shrimp + brown rice',d:'7 oz salmon or shrimp, 1 cup brown rice, 1.5 cups of any vegetable.'}]
 };
 const SUPPS=[
- {k:'mt',n:'Milk Thistle'},
- {k:'dr',n:'Dandelion Root'},
- {k:'pe',n:'Papaya Enzymes'}];
+ {k:'ds',n:'Morning detox shot',doses:['am']},
+ {k:'mt',n:'Milk Thistle',doses:['am','pm']},
+ {k:'dr',n:'Dandelion Root',doses:['am','pm']},
+ {k:'pe',n:'Papaya Enzymes',doses:['am','pm']}];
+const SUPP_DOSES=SUPPS.reduce((a,sp)=>a+sp.doses.length,0);
 
 const SLOTS=[
  {k:'m1',name:'Breakfast',type:'breakfast',gap:'then 2–3 hrs'},
- {k:'m2',name:'Snack',type:'snack',gap:'then 1.5–2 hrs'},
- {k:'m3',name:'Lunch or dinner',type:'mid',gap:'then 2–3 hrs'},
- {k:'m4',name:'Snack',type:'snack',gap:'then 1.5–2 hrs'},
- {k:'m5',name:'Lunch or dinner',type:'mid',gap:'last meal'}];
+ {k:'m2',name:'Snack',type:'snack',gap:'skip on refeed days'},
+ {k:'m3',name:'Lunch',type:'lunch',gap:'then 2–3 hrs'},
+ {k:'m4',name:'Snack',type:'snack',gap:'skip on refeed days'},
+ {k:'m5',name:'Pre-workout',type:'pre',gap:'then train'},
+ {k:'m6',name:'Post-workout',type:'post',gap:'straight after'},
+ {k:'m7',name:'Dinner',type:'dinner',gap:'last meal'}];
 
 const W={
  chest:{name:'Chest',short:'CHEST',lift:true,ex:[
   {n:'Push-ups with alternating arm raise',s:'4 × 12–15',sets:4,v:'https://m.youtube.com/shorts/NON4MT4Y-As'},
   {n:'Decline dumbbell chest press',s:'4 × 10',sets:4},
   {n:'Decline wide-arm push-ups',s:'4 × 12',sets:4,v:'https://m.youtube.com/watch?v=X-HbQoQ_VAg',note:'Thumbs just outside shoulders.'},
-  {n:'Seated dumbbell underhand chest fly',s:'4 × 15',sets:4,v:'https://m.youtube.com/shorts/EdauMnxtqnU'},
+  {n:'Seated underhand fly + chest fly',s:'4 × 12 / 4 × 8',sets:4,v:'https://m.youtube.com/shorts/EdauMnxtqnU',note:'Superset — underhand flies straight into standard chest flies, then rest.'},
   {n:'Bench press',s:'2 × 10, then drop set',sets:3,v:'https://m.youtube.com/watch?v=OnfqK7cGhC8',note:'Third set is the drop set — strip weight and keep going to failure.'}]},
  arms:{name:'Arms & shoulders',short:'ARMS',lift:true,ex:[
-  {n:'Incline dumbbell curls',s:'4 × 10',sets:4},
-  {n:'Incline diamond push-ups',s:'4 × 12',sets:4},
+  {n:'Incline DB curls + lateral raises',s:'4 × 10 / 4 × 12',sets:4,note:'Superset — curls straight into lateral raises, then rest.'},
+  {n:'Incline diamond push-ups + front raises',s:'4 × 12 / 4 × 10',sets:4,note:'Superset — diamond push-ups straight into front dumbbell raises, then rest.'},
   {n:'Dumbbell kickbacks',s:'4 × 12',sets:4},
+  {n:'Dumbbell shoulder press',s:'4 × 12',sets:4},
   {n:'Dumbbell / barbell 21s',s:'3 sets',sets:3,v:'https://m.youtube.com/shorts/gKOo4HyCM_M'},
-  {n:'Dumbbell neutral close-grip press',s:'4 × 12',sets:4,v:'https://m.youtube.com/shorts/EvjftwN-nSY'}]},
+  {n:'Close-grip press + rear delt flies',s:'4 × 12 / 4 × 20',sets:4,v:'https://m.youtube.com/shorts/EvjftwN-nSY',note:'Superset — neutral close-grip press straight into rear delt flies, then rest.'},
+  {n:'Pike push-ups',s:'1 set to failure',sets:1,v:'https://m.youtube.com/watch?v=XckEEwa1BPI',note:'Finisher — one set, go until you cannot.'}]},
  legs:{name:'Legs & back',short:'LEGS',lift:true,ex:[
   {n:'Trap bar deadlift + squat jumps',s:'4 × 8 / 4 × 10',sets:4,note:'Superset — deadlifts straight into squat jumps, then rest.'},
   {n:'DB single-arm row + weighted jumping jacks',s:'4 × 10 / 4 × 15',sets:4,note:'Superset — rows straight into jumping jacks, then rest.'},
   {n:'Dumbbell alternating lunges',s:'4 × 8 each leg',sets:4},
   {n:'Plate-loaded hyperextensions',s:'4 × 12',sets:4,v:'https://m.youtube.com/shorts/zR1kGOiyX70'},
-  {n:'Dumbbell stiff-legged deadlift',s:'4 × 10',sets:4},
+  {n:'Stiff-legged deadlift + box jumps',s:'4 × 10 / 4 × 8',sets:4,note:'Superset — stiff-legged deadlifts straight into box or bench jumps, then rest.'},
   {n:'Dumbbell Bulgarian split squat',s:'4 × 8 each leg',sets:4,v:'https://m.youtube.com/watch?v=Fmjj7wFJWRE'}]},
- hiitA:{name:'HIIT A — total body',short:'HIIT A',hiit:true,ex:[
+ hiitA:{name:'HIIT 1 — total body',short:'HIIT 1',hiit:true,ex:[
   {n:'Dumbbell squat to shoulder press',s:'10–20 lb · 3 rounds',sets:3},
   {n:'Lying scissor kicks',s:'3 rounds',sets:3,v:'https://m.youtube.com/shorts/2DL3HVW93_0'},
   {n:'Weighted jumping jacks',s:'3 rounds',sets:3},
   {n:'Mountain climbers',s:'3 rounds',sets:3},
-  {n:'Jump rope',s:'3 rounds',sets:3},
-  {n:'Alternating forward lunges',s:'3 rounds',sets:3}]},
- hiitB:{name:'HIIT B',short:'HIIT B',hiit:true,ex:[
+  {n:'Alternating forward lunges',s:'3 rounds',sets:3},
+  {n:'Sprints — 15s on / 15s off',s:'3 min block',sets:6,note:'Different interval to the rest: 15 seconds on, 15 off, for 3 minutes. Run the timer manually or set work and off to 15s.'}]},
+ hiitB:{name:'HIIT 2',short:'HIIT 2',hiit:true,ex:[
   {n:'Power shuffles',s:'3 rounds',sets:3,v:'https://m.youtube.com/shorts/-8VvfhUQsrA'},
   {n:'Treadmill jog',s:'0.5 mile',sets:1},
-  {n:'Lying leg lifts',s:'3 rounds',sets:3},
+  {n:'Plank to pike jump',s:'3 rounds',sets:3,v:'https://m.youtube.com/watch?v=hhWVyxhTfNs'},
   {n:'High knees',s:'3 rounds',sets:3},
-  {n:'Plank up/downs',s:'3 rounds',sets:3,v:'https://m.youtube.com/watch?v=jF3wvzUUw7s'}]},
+  {n:'Plank up/downs',s:'3 rounds',sets:3,v:'https://m.youtube.com/watch?v=jF3wvzUUw7s'},
+  {n:'Plank rotations',s:'3 rounds',sets:3,v:'https://m.youtube.com/watch?v=n9AZqYY3k_o'}]},
+ hiitC:{name:'HIIT 3 — core',short:'HIIT 3',hiit:true,ex:[
+  {n:'Plank ankle taps',s:'3 rounds',sets:3,v:'https://m.youtube.com/shorts/tK5-RfHzn_4'},
+  {n:'Plank side-to-side jumps',s:'3 rounds',sets:3,v:'https://m.youtube.com/shorts/oe9xefQ9DbI'},
+  {n:'Toe taps',s:'3 rounds',sets:3,v:'https://m.youtube.com/shorts/v1Fx2t9gNUw'},
+  {n:'Russian twists',s:'3 rounds',sets:3},
+  {n:'Plank rotations',s:'3 rounds',sets:3,v:'https://m.youtube.com/watch?v=n9AZqYY3k_o'}]},
  rest:{name:'Full rest',short:'REST',rest:true,ex:[]}
 };
 const TARGETS=[
- {k:'arms',n:'Arm & shoulder circuits',need:2},
- {k:'chest',n:'Chest circuit',need:1},
- {k:'legs',n:'Leg & back circuit',need:1},
- {k:'hiit',n:'HIIT sessions (no lifting)',need:2},
+ {k:'chest',n:'Chest circuits',need:2},
+ {k:'arms',n:'Arm & shoulder circuit',need:1},
+ {k:'hiit',n:'HIIT sessions',need:3},
+ {k:'cardio',n:'25 min cardio walks',need:3},
  {k:'rest',n:'Full rest day — no weights, no cardio',need:1,amber:true}];
-const WATER_GOAL=128, KEY='training-log-v1';
+const WATER_GOAL=128, WATER_HIT=128, KEY='training-log-v1';
 
 /* ========== STORAGE: device first, memory fallback ========== */
 const Store=(()=>{
@@ -308,14 +332,16 @@ function S(k){const v=LOG.settings[k];return v===undefined?DEFAULTS[k]:v}
 function customFor(slot){return (LOG.custom||[]).filter(c=>c.slot===slot)}
 function optsFor(type){
   if(type==='mid')return MEALS.lunch.concat(MEALS.dinner,customFor('lunch'),customFor('dinner'));
-  return MEALS[type].concat(customFor(type));
+  const base=(MEALS[type]||[]).concat(customFor(type));
+  /* a refeed replaces a lunch or a dinner, so offer them in those two slots */
+  return (type==='lunch'||type==='dinner')?base.concat(MEALS.refeed):base;
 }
 function findMeal(id){
   if(!id)return null;
   for(const k in MEALS){const m=MEALS[k].find(o=>o.id===id);if(m)return m}
   return (LOG.custom||[]).find(c=>c.id===id)||null;
 }
-const SLOT_LABEL={breakfast:'Breakfast',lunch:'Lunch',dinner:'Dinner',snack:'Snack'};
+const SLOT_LABEL={breakfast:'Breakfast',lunch:'Lunch',dinner:'Dinner',snack:'Snack',pre:'Pre-workout',post:'Post-workout',refeed:'Refeed'};
 let today=iso(new Date()), trainPick=null;
 
 function iso(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
@@ -424,13 +450,16 @@ const Timer=(()=>{
 
 function weekDates(){const d=new Date(),off=d.getDay();d.setDate(d.getDate()-off);
   return Array.from({length:7},(_,i)=>{const x=new Date(d);x.setDate(d.getDate()+i);return iso(x)})}
-function counts(){const c={arms:0,chest:0,legs:0,hiit:0,rest:0};
-  weekDates().forEach(k=>{const s=LOG.days[k]&&LOG.days[k].session;if(!s||!W[s])return;
-    if(s==='hiitA'||s==='hiitB')c.hiit++;else if(c[s]!==undefined)c[s]++});return c}
+function counts(){const c={arms:0,chest:0,legs:0,hiit:0,rest:0,cardio:0};
+  weekDates().forEach(k=>{const e=LOG.days[k];if(!e)return;
+    if(e.cardio)c.cardio++;
+    const s=e.session;if(!s||!W[s])return;
+    if(W[s].hiit)c.hiit++;else if(c[s]!==undefined)c[s]++});return c}
 /* True streak: counts back from today and stops at the first day with nothing logged.
    Day 1 was Sept 14. Everything up to and including Sept 27 is credited as completed,
    since those days happened before the app existed. From Sept 28 on, a day only counts
    if something is logged — session, water, a meal or a supplement. */
+const PHASE_LABEL='Phase 3';
 const STREAK_START='2026-09-14';
 const STREAK_CREDITED_THROUGH='2026-09-27';
 function streak(){
@@ -457,6 +486,7 @@ function render(){
   $('dow').textContent=now.toLocaleDateString(undefined,{weekday:'long'});
   $('date').textContent=now.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
   $('streak').textContent=streak();
+  $('phase').textContent=PHASE_LABEL;
   $('banner').innerHTML=Store.ok()?'':
     '<div class="warn">This preview can\'t save to the device. Download the file and open it from your phone — then everything you log sticks.</div>';
   renderStrip();renderToday();renderFuel();renderTrain();renderWeek();
@@ -470,14 +500,14 @@ function renderStrip(){
 function renderToday(){
   const t=day();
   const chips=Object.keys(W).map(k=>`<button class="chip ${k==='rest'?'rest':''}" aria-pressed="${t.session===k}" data-session="${k}">${W[k].short}</button>`).join('');
-  const extra=W[t.session]&&W[t.session].lift?
-    `<div class="slot ${t.cardio?'done':''}" style="border-top:1px solid var(--line);margin-top:12px">
+  const extra=t.session==='rest'
+    ?'<div class="note">Rest day. No weights, no cardio. This one is part of the plan.</div>'
+    :`<div class="slot ${t.cardio?'done':''}" style="border-top:1px solid var(--line);margin-top:12px">
       <div class="slot-head"><div class="box ${t.cardio?'on':''}" data-cardio="1">✓</div>
-      <div class="slot-name">Cardio — 25 min walk</div><div class="slot-gap">3.0–3.5 · 6% incline</div></div></div>`:
-    (W[t.session]&&W[t.session].hiit?'<div class="note">HIIT day — no lifting, no cardio walk.</div>':
-     (t.session==='rest'?'<div class="note">Rest day. No weights, no cardio. This one is part of the plan.</div>':''));
+      <div class="slot-name">Cardio — 25 min walk</div><div class="slot-gap">3.0–3.5 · 6% incline</div></div></div>
+      <div class="note">Cardio is its own target now — 3 walks a week, on whichever days suit you.</div>`;
   const pct=Math.min(100,t.water/WATER_GOAL*100);
-  const sTaken=SUPPS.reduce((a,sp)=>a+(t.supps&&t.supps[sp.k+'-am']?1:0)+(t.supps&&t.supps[sp.k+'-pm']?1:0),0);
+  const sTaken=SUPPS.reduce((a,sp)=>a+sp.doses.filter(x=>t.supps&&t.supps[sp.k+'-'+x]).length,0);
   const meals=SLOTS.map(s=>{
     const opts=optsFor(s.type), sel=findMeal(t.meals[s.k]), cur=t.meals[s.k];
     return `<div class="slot ${t.done[s.k]?'done':''}">
@@ -488,9 +518,9 @@ function renderToday(){
       ${sel?`<div class="detail">${esc(sel.d)}</div>`:''}</div>`}).join('');
   $('view-today').innerHTML=`
     <div class="card"><div class="eyebrow">Today's session</div><div class="chips">${chips}</div>${extra}</div>
-    <div class="card"><div class="eyebrow"><span>Water</span><span>goal 100–128 oz</span></div>
-      <div class="wbar" id="wbar"><div class="wfill${t.water>=100?' hit':''}" id="wfill" style="width:${pct}%"></div></div>
-      <div class="wrow"><div class="num">${t.water}<s> / ${WATER_GOAL} oz</s>${t.water>=100?'<span class="hitbadge" id="wbadge">Goal hit</span>':''}</div>
+    <div class="card"><div class="eyebrow"><span>Water</span><span>goal 1 gallon</span></div>
+      <div class="wbar" id="wbar"><div class="wfill${t.water>=WATER_HIT?' hit':''}" id="wfill" style="width:${pct}%"></div></div>
+      <div class="wrow"><div class="num">${t.water}<s> / ${WATER_GOAL} oz</s>${t.water>=WATER_HIT?'<span class="hitbadge" id="wbadge">Goal hit</span>':''}</div>
       <div class="wbtns">
         <button class="btn" data-water="-5">−5</button>
         <button class="btn" data-water="5">+5</button>
@@ -498,19 +528,19 @@ function renderToday(){
         <button class="btn" data-water="30">+30</button></div></div>
       <div class="note">Limit to one sugar-free / zero energy drink per day.</div></div>
     <div class="card">
-      <div class="eyebrow"><span>Supplements</span><span>${sTaken} / 6 taken</span></div>
+      <div class="eyebrow"><span>Supplements</span><span>${sTaken} / ${SUPP_DOSES} taken</span></div>
       ${SUPPS.map(sp=>{
-        const am=!!(t.supps&&t.supps[sp.k+'-am']), pm=!!(t.supps&&t.supps[sp.k+'-pm']);
-        return `<div class="slot ${am&&pm?'done':''}">
+        const on=sp.doses.map(x=>!!(t.supps&&t.supps[sp.k+'-'+x]));
+        return `<div class="slot ${on.every(Boolean)?'done':''}">
           <div class="slot-head">
             <div class="slot-name">${sp.n}</div>
             <div class="supp">
-              <span class="lbl">AM</span><div class="box ${am?'on':''}" data-supp="${sp.k}-am">\u2713</div>
-              <span class="lbl">PM</span><div class="box ${pm?'on':''}" data-supp="${sp.k}-pm">\u2713</div>
+              ${sp.doses.map((x,i)=>`<span class="lbl">${x.toUpperCase()}</span>`+
+                `<div class="box ${on[i]?'on':''}" data-supp="${sp.k}-${x}">\u2713</div>`).join('')}
             </div>
           </div></div>`}).join('')}
     </div>
-    <div class="card"><div class="eyebrow"><span>Meals</span><span>${Object.values(t.done).filter(Boolean).length} / 5 logged</span></div>${meals}</div>`;
+    <div class="card"><div class="eyebrow"><span>Meals</span><span>${Object.values(t.done).filter(Boolean).length} / ${SLOTS.length} logged</span></div>${meals}</div>`;
 }
 function renderFuel(){
   const g=(title,arr)=>`<div class="menu-group"><h3>${title}</h3>
@@ -520,7 +550,7 @@ function renderFuel(){
     <div style="border-top:1px solid var(--line);padding-top:12px;margin-top:10px">
       <div class="lbl" style="margin-bottom:6px">Which slot</div>
       <select id="f-slot">
-        ${['breakfast','lunch','dinner','snack'].map(k=>`<option value="${k}">${SLOT_LABEL[k]}</option>`).join('')}
+        ${['breakfast','lunch','dinner','snack','pre','post'].map(k=>`<option value="${k}">${SLOT_LABEL[k]}</option>`).join('')}
       </select>
       <div class="lbl" style="margin:12px 0 6px">Name</div>
       <input id="f-name" class="tin" placeholder="e.g. Ideal Nutrition — chicken & rice">
@@ -542,10 +572,10 @@ function renderFuel(){
       ${form}
     </div>
     <div class="card"><div class="eyebrow">Daily rules</div>
-      <div class="menu-item" style="border:0;padding-top:0">100–128 oz water a day. One sugar-free energy drink max.</div>
+      <div class="menu-item" style="border:0;padding-top:0">1 gallon of water a day (128 oz). One sugar-free energy drink max.</div>
       <div class="menu-item">Condiments: hot sauce and mustard. Choose low-calorie where possible and check serving sizes on the regular versions.</div>
       <div class="menu-item">Ask for extra protein when ordering out.</div>
-      <div class="menu-item">Spacing: 2–3 hours between meals, 1.5–2 hours after a snack.</div></div>
+      <div class="menu-item">Spacing: 2–3 hours between meals, 1.5–2 hours after a snack.</div><div class="menu-item">Morning detox shot every day — it is the first row on the supplements card.</div><div class="menu-item">Refeed: 1 meal per week is optimal, 2 at most. If you take two, leave 3 days between them. Drop both snacks on a refeed day.</div></div>
     <div class="card"><div class="eyebrow">Original plan</div>
       ${g('Breakfast',MEALS.breakfast)}${g('Lunch',MEALS.lunch)}${g('Dinner',MEALS.dinner)}${g('Snacks',MEALS.snack)}</div>`;
 }
@@ -598,7 +628,7 @@ function renderWeek(){
       const pips=Array.from({length:t.need},(_,i)=>`<div class="pip ${i<got?'on':''} ${t.amber?'amber':''}"></div>`).join('');
       return `<div class="target"><div class="pips">${pips}</div><div class="t-name">${t.n}</div>
         <div class="t-count">${Math.min(got,t.need)}/${t.need}</div></div>`}).join('')}
-    <div class="note">Split the four weight days however you like. The cardio walk goes on lifting days only — never on HIIT days or your rest day.</div></div>
+    <div class="note">Six sessions and one full rest day. Cardio is three walks a week on any day except rest. Legs &amp; back is still there to pick whenever you want it — it just is not a weekly requirement this phase.</div></div>
     <div class="card"><div class="eyebrow">Week at a glance</div>
     ${weekDates().map(k=>{const e=LOG.days[k], d=new Date(k+'T12:00');
       return `<div class="target">
@@ -621,6 +651,7 @@ document.addEventListener('click',e=>{
     document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected',b===el));
     ['today','fuel','train','week'].forEach(v=>$('view-'+v).classList.toggle('hidden',v!==el.dataset.v));
     if(el.dataset.v==='train')renderTrain();
+    if(el.dataset.v==='week')renderWeek();
     window.scrollTo({top:0});return;
   }
   if(el.dataset.act==='addmeal'){addingMeal=true;renderFuel();return}
@@ -648,7 +679,7 @@ document.addEventListener('click',e=>{
   if(el.dataset.water!==undefined){
     const before=t.water;
     t.water=Math.max(0,t.water+ +el.dataset.water);
-    const crossed=before<100&&t.water>=100;
+    const crossed=before<WATER_HIT&&t.water>=WATER_HIT;
     save();renderToday();renderWeek();
     if(crossed){
       const f=$('wfill'),b=$('wbar'),g=$('wbadge');
@@ -658,7 +689,7 @@ document.addEventListener('click',e=>{
     }
     return}
   if(el.dataset.meal){t.done[el.dataset.meal]=!t.done[el.dataset.meal];save();renderToday();return}
-  if(el.dataset.cardio){t.cardio=!t.cardio;save();renderToday();return}
+  if(el.dataset.cardio){t.cardio=!t.cardio;save();renderToday();renderWeek();return}
   if(el.dataset.supp){if(!t.supps)t.supps={};
     t.supps[el.dataset.supp]=!t.supps[el.dataset.supp];save();renderToday();return}
   if(el.dataset.set){const id=el.dataset.set,i=+el.dataset.i;
