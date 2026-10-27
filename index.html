@@ -340,7 +340,8 @@ const Store=(()=>{
 let LOG={days:{},weights:{},settings:{},custom:[]};
 let addingMeal=false;
 let editDay=null;
-const DEFAULTS={restLen:90,autoRest:true,work:30,rec:30,rounds:3,sound:true};
+const VOICE_LABEL={count:'Counts 10\u21921',cues:'"Ten seconds"',off:'Off'};
+const DEFAULTS={restLen:90,autoRest:true,work:30,rec:30,rounds:3,sound:true,voice:'count'};
 function S(k){const v=LOG.settings[k];return v===undefined?DEFAULTS[k]:v}
 
 /* custom meals the user adds on the phone */
@@ -373,7 +374,7 @@ function load(){const p=Store.read();if(p){LOG.days=p.days||{};LOG.weights=p.wei
 
 /* ================= TIMER ================= */
 const Timer=(()=>{
-  let mode=null,phase=null,endAt=0,left=0,paused=false,round=0,rounds=3,label='',tick=null,lock=null;
+  let mode=null,phase=null,endAt=0,left=0,paused=false,round=0,rounds=3,label='',tick=null,lock=null,restLen=0;
   let ac=null,armed=false;
 
   function audio(){ // iOS needs the context created inside a tap
@@ -394,6 +395,39 @@ const Timer=(()=>{
   }
   const cue={tick:()=>beep(660,0.09,0.22), go:()=>beep(1050,0.28,0.4),
              ease:()=>beep(430,0.28,0.35), done:()=>{beep(880,0.16);setTimeout(()=>beep(1320,0.4),190)}};
+
+  /* ---- spoken countdown ---- */
+  let vox=null, voxReady=false;
+  function pickVoice(){
+    try{const list=speechSynthesis.getVoices()||[];
+      vox=list.find(v=>/^en[-_]US/i.test(v.lang)&&!/novelty/i.test(v.name))
+         ||list.find(v=>/^en/i.test(v.lang))||list[0]||null;
+    }catch(e){}
+  }
+  try{pickVoice(); if('speechSynthesis' in window)speechSynthesis.addEventListener('voiceschanged',pickVoice)}catch(e){}
+  function say(text){
+    if(S('voice')==='off')return;
+    if(!('speechSynthesis' in window))return;
+    try{
+      /* drop anything still queued so a stale number never lands after a newer one */
+      speechSynthesis.cancel();
+      const u=new SpeechSynthesisUtterance(text);
+      if(vox)u.voice=vox;
+      u.rate=1.25;u.pitch=1;u.volume=1;u.lang=(vox&&vox.lang)||'en-US';
+      speechSynthesis.speak(u);
+    }catch(e){}
+  }
+  function hush(){try{speechSynthesis.cancel()}catch(e){}}
+  function primeVoice(){
+    if(voxReady||S('voice')==='off'||!('speechSynthesis' in window))return;
+    try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u);voxReady=true}catch(e){}
+  }
+  /* phase length in seconds, so a 15s sprint does not start counting before it begins */
+  function phaseLen(){
+    if(mode==='rest')return restLen||S('restLen');
+    return phase==='work'?S('work'):S('rec');
+  }
+  function countFrom(){const t=phaseLen();return t>=20?10:Math.min(5,Math.max(3,t-2))}
 
   async function wake(on){
     try{
@@ -423,18 +457,26 @@ const Timer=(()=>{
   function step(){
     if(paused)return;
     const r=remaining();
-    if(r<=3&&r>0&&r!==step.last){cue.tick();step.last=r}
+    if(r>0&&r!==step.last){
+      const v=S('voice');
+      if(v==='count'&&r<=countFrom())say(String(r));
+      else if(v==='cues'&&r===10)say('ten seconds');
+      /* the 3-2-1 beeps would talk over the voice, so only beep when it is silent */
+      const counting=(v==='count'&&r<=countFrom());
+      if(r<=3&&!counting)cue.tick();
+      step.last=r;
+    }
     if(r<=0){advance();return}
     paint();
   }
   function advance(){
-    if(mode==='rest'){cue.done();stop();return}
+    if(mode==='rest'){cue.done();say('Go');stop();return}
     if(phase==='work'){
-      phase='rec';cue.ease();endAt=Date.now()+S('rec')*1000;step.last=null;paint();return;
+      phase='rec';cue.ease();say('Rest');endAt=Date.now()+S('rec')*1000;step.last=null;paint();return;
     }
     round++;
-    if(round>rounds){cue.done();stop();return}
-    phase='work';cue.go();endAt=Date.now()+S('work')*1000;step.last=null;paint();
+    if(round>rounds){cue.done();say('Done');stop();return}
+    phase='work';cue.go();say('Work');endAt=Date.now()+S('work')*1000;step.last=null;paint();
   }
 
   function begin(){
@@ -442,19 +484,21 @@ const Timer=(()=>{
   }
   return {
     unlock,
+    sample(){primeVoice();say('Three, two, one')},
     rest(sec,what){
-      unlock();mode='rest';phase='rest';label=what||'';paused=false;step.last=null;
-      endAt=Date.now()+(sec||S('restLen'))*1000;begin();
+      unlock();primeVoice();mode='rest';phase='rest';label=what||'';paused=false;step.last=null;
+      restLen=sec||S('restLen');
+      endAt=Date.now()+restLen*1000;begin();
     },
     interval(what){
-      unlock();mode='interval';phase='work';label=what||'';paused=false;round=1;
-      rounds=S('rounds');step.last=null;cue.go();
+      unlock();primeVoice();mode='interval';phase='work';label=what||'';paused=false;round=1;
+      rounds=S('rounds');step.last=null;cue.go();say('Work');
       endAt=Date.now()+S('work')*1000;begin();
     },
     pause(){
       if(!mode)return;
       if(paused){paused=false;endAt=Date.now()+left*1000}
-      else{left=remaining();paused=true}
+      else{left=remaining();paused=true;hush()}
       paint();
     },
     add(){if(!mode)return;if(paused)left+=15;else endAt+=15000;paint()},
@@ -462,7 +506,7 @@ const Timer=(()=>{
     chime(){beep(880,0.12,0.28);setTimeout(()=>beep(1320,0.3,0.3),140)},
     running(){return !!mode}
   };
-  function stop(){mode=null;phase=null;clearInterval(tick);tick=null;wake(false);paint()}
+  function stop(){mode=null;phase=null;clearInterval(tick);tick=null;hush();wake(false);paint()}
 })();
 
 function weekDates(){const d=new Date(),off=d.getDay();d.setDate(d.getDate()-off);
@@ -640,6 +684,8 @@ function renderTrain(){
       </div>
       <div class="row"><span class="lbl">Sound cues</span>
         <button class="toggle" data-set-opt="sound" aria-pressed="${S('sound')}">${S('sound')?'On':'Off'}</button></div>
+      <div class="row"><span class="lbl">Voice countdown</span>
+        <button class="toggle" data-set-opt="voice" aria-pressed="${S('voice')!=='off'}">${VOICE_LABEL[S('voice')]}</button></div>
       <div class="note">Beeps count you down the last three seconds, then sound the change. Start it once and run the whole circuit.</div>
     </div>`:`
     <div class="card"><div class="eyebrow"><span>Rest timer</span><span>between sets</span></div>
@@ -653,6 +699,8 @@ function renderTrain(){
         <button class="toggle" data-set-opt="autoRest" aria-pressed="${S('autoRest')}">${S('autoRest')?'On · '+S('restLen')+'s':'Off'}</button></div>
       <div class="row"><span class="lbl">Sound cues</span>
         <button class="toggle" data-set-opt="sound" aria-pressed="${S('sound')}">${S('sound')?'On':'Off'}</button></div>
+      <div class="row"><span class="lbl">Voice countdown</span>
+        <button class="toggle" data-set-opt="voice" aria-pressed="${S('voice')!=='off'}">${VOICE_LABEL[S('voice')]}</button></div>
     </div>`;
   $('view-train').innerHTML=`
     <div class="card"><div class="eyebrow"><span>Circuit</span><span>${t.session&&W[t.session]?esc(W[t.session].short)+' logged today':'nothing logged today'}</span></div>
@@ -774,6 +822,9 @@ document.addEventListener('click',e=>{
       if(i<lens.length-1){LOG.settings.restLen=lens[i+1]}
       else{LOG.settings.autoRest=false;LOG.settings.restLen=90}
     } else if(k==='autoRest'){LOG.settings.autoRest=true}
+    else if(k==='voice'){const o=['count','cues','off'];
+      LOG.settings.voice=o[(o.indexOf(S('voice'))+1)%o.length];
+      if(LOG.settings.voice!=='off')Timer.sample();}
     else {LOG.settings[k]=!S(k); if(LOG.settings[k])Timer.unlock()}
     save(); renderTrain(); return}
 });
